@@ -1,0 +1,41 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: mingw-w64-ucrt-x86_64-gcc
+
+      - name: Add compiler to PATH
+        run: echo "C:/msys64/ucrt64/bin" >> "$GITHUB_PATH"
+
+      - name: Build exes
+        run: |
+          g++ -O2 -static -mconsole -o 2048.exe 2048.cpp
+          g++ -O2 -static -mwindows -o 2048gui.exe 2048gui.cpp
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0
+          name: 2048 (3x3) v1.0
+          body: |
+            3x3 版 2048 Windows 可执行文件（Actions 自动构建）
+            - 2048gui.exe：图形界面版（推荐）
+            - 2048.exe：控制台版
+          files: |
+            2048.exe
+            2048gui.exe
